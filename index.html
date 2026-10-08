@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⏰ 魔法時間化聚大冒險 - 小六數學練習</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pastel: {
+                            pink: '#FFD1DC',
+                            pinkDark: '#FF94B9',
+                            cream: '#FFF9E6',
+                            yellow: '#FFE599',
+                            mint: '#D4F0F0',
+                            mintDark: '#81E6D9',
+                            lavender: '#E6E6FA',
+                            purple: '#B39DDB',
+                            text: '#5A4A68'
+                        }
+                    },
+                    fontFamily: {
+                        kawaii: ['"Fredoka"', '"Noto Sans TC"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #FFE4E1 0%, #E6E6FA 50%, #E0F7FA 100%);
+            min-height: 100vh;
+            color: #5A4A68;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFF9E6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FF94B9;
+            border-radius: 10px;
+        }
+
+        /* Japanese Kawaii Card Shadow & Border */
+        .kawaii-card {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(8px);
+            border: 4px solid #FFD1DC;
+            border-radius: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(255, 148, 185, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        .kawaii-btn {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 0px #FF94B9;
+        }
+        .kawaii-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0px #FF94B9;
+        }
+        .kawaii-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0px #FF94B9;
+        }
+
+        .kawaii-btn-mint {
+            box-shadow: 0 4px 0px #4DB6AC;
+        }
+        .kawaii-btn-mint:hover {
+            box-shadow: 0 6px 0px #4DB6AC;
+        }
+
+        .kawaii-btn-purple {
+            box-shadow: 0 4px 0px #9575CD;
+        }
+        .kawaii-btn-purple:hover {
+            box-shadow: 0 6px 0px #9575CD;
+        }
+
+        /* Standardized Vertical Fraction Formatting for Text, Steps & Buttons */
+        .frac {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            align-items: center;
+            text-align: center;
+            font-size: 0.92em;
+            line-height: 1.1;
+            margin: 0 4px;
+            padding: 0 2px;
+        }
+        .frac .num {
+            border-bottom: 2px solid currentColor;
+            padding: 0 4px 2px 4px;
+            display: block;
+            width: 100%;
+            font-weight: bold;
+        }
+        .frac .den {
+            padding: 2px 4px 0 4px;
+            display: block;
+            width: 100%;
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-gentle {
+            animation: bounce-gentle 2.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 148, 185, 0.6)); }
+            50% { filter: drop-shadow(0 0 15px rgba(255, 148, 185, 0.9)); }
+        }
+        .animate-glow {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+        .animate-wiggle {
+            animation: wiggle 0.5s ease-in-out infinite;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="p-3 md:p-6 flex flex-col items-center justify-center min-h-screen">
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="w-full max-w-6xl flex flex-col lg:flex-row gap-6">
+
+        <!-- LEFT SIDEBAR: Mode Selection & Scorecard -->
+        <aside class="w-full lg:w-80 flex flex-col gap-5">
+            <!-- Game Title Card -->
+            <div class="kawaii-card p-5 text-center relative overflow-hidden bg-gradient-to-b from-white to-pink-50">
+                <div class="absolute -right-4 -top-4 w-16 h-16 bg-pastel-pink rounded-full opacity-40"></div>
+                <div class="inline-block p-3 bg-pink-100 rounded-full mb-2 animate-bounce-gentle">
+                    <span class="text-4xl">⏰</span>
+                </div>
+                <h1 class="text-2xl font-black text-pastel-text tracking-wide">時間化聚大冒險</h1>
+                <p class="text-xs font-bold text-pink-400 mt-1 bg-pink-100/80 px-3 py-1 rounded-full inline-block">
+                    小六數學 ‧ 日系練習場
+                </p>
+            </div>
+
+            <div class="kawaii-card p-4 flex flex-col gap-3">
+                <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider px-2 flex items-center gap-1">
+                    <span>✨</span> 選擇練習單元
+                </h2>
+
+                <button id="mode-btn-1" onclick="switchMode(1)" class="kawaii-btn w-full p-3.5 rounded-2xl bg-pink-400 text-white font-bold text-left flex items-center justify-between group cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl bg-white/20 p-1.5 rounded-xl">🔢</span>
+                        <div>
+                            <div class="text-base leading-tight">小數 ↔ 時分</div>
+                            <div class="text-xs font-normal text-pink-100">雙向填充題</div>
+                        </div>
+                    </div>
+                    <span class="text-xl group-hover:translate-x-1 transition-transform">➔</span>
+                </button>
+
+                <button id="mode-btn-2" onclick="switchMode(2)" class="kawaii-btn kawaii-btn-mint w-full p-3.5 rounded-2xl bg-teal-400 text-white font-bold text-left flex items-center justify-between group cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl bg-white/20 p-1.5 rounded-xl">🍕</span>
+                        <div>
+                            <div class="text-base leading-tight">分數 ↔ 時分</div>
+                            <div class="text-xs font-normal text-teal-100">直式分數填充題 (須最簡)</div>
+                        </div>
+                    </div>
+                    <span class="text-xl group-hover:translate-x-1 transition-transform">➔</span>
+                </button>
+
+                <button id="mode-btn-3" onclick="switchMode(3)" class="kawaii-btn kawaii-btn-purple w-full p-3.5 rounded-2xl bg-purple-400 text-white font-bold text-left flex items-center justify-between group cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl bg-white/20 p-1.5 rounded-xl">🌟</span>
+                        <div>
+                            <div class="text-base leading-tight">混合化聚挑戰</div>
+                            <div class="text-xs font-normal text-purple-100">四選一選擇題</div>
+                        </div>
+                    </div>
+                    <span class="text-xl group-hover:translate-x-1 transition-transform">➔</span>
+                </button>
+            </div>
+
+            <!-- Scorecard -->
+            <div class="kawaii-card p-5 bg-gradient-to-br from-amber-50 via-white to-pink-50">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-bold text-sm text-gray-600">🏆 學習成果</span>
+                    <button onclick="resetStats()" class="text-xs text-pink-400 hover:text-pink-600 underline font-bold">重置得分</button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-white p-2.5 rounded-2xl border-2 border-amber-200">
+                        <div class="text-xs text-amber-600 font-bold">總分數</div>
+                        <div id="stat-score" class="text-xl font-black text-amber-500">0</div>
+                    </div>
+                    <div class="bg-white p-2.5 rounded-2xl border-2 border-yellow-200">
+                        <div class="text-xs text-yellow-600 font-bold">星星</div>
+                        <div id="stat-stars" class="text-xl font-black text-yellow-500">⭐ 0</div>
+                    </div>
+                    <div class="bg-white p-2.5 rounded-2xl border-2 border-pink-200">
+                        <div class="text-xs text-pink-600 font-bold">連續答對</div>
+                        <div id="stat-streak" class="text-xl font-black text-pink-500">🔥 0</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- RIGHT WORKSPACE: Interaction Area -->
+        <main class="flex-1 flex flex-col gap-5">
+            
+            <!-- Question Box -->
+            <div class="kawaii-card p-6 md:p-8 relative min-h-[220px] flex flex-col justify-between bg-white">
+                <div class="flex justify-between items-center mb-4 border-b-2 border-pink-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span id="question-mode-badge" class="px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-bold">
+                            選項一：小數與時分互化
+                        </span>
+                        <span id="question-index-tag" class="text-xs font-bold text-gray-400">
+                            第 <span id="q-num">1</span> 題
+                        </span>
+                    </div>
+                    <div class="text-xs font-bold text-pink-400 flex items-center gap-1">
+                        <span>💡 請在下方填入正確答案</span>
+                    </div>
+                </div>
+
+                <!-- Main Question Prompt -->
+                <div class="my-auto py-4 text-center">
+                    <div id="question-prompt" class="text-2xl md:text-3xl font-extrabold text-pastel-text leading-relaxed flex items-center justify-center gap-3 flex-wrap">
+                        <!-- Dynamic Question HTML injected here -->
+                    </div>
+                </div>
+
+                <div class="text-right text-xs text-gray-400 font-medium pt-2">
+                    目標：將時間準確換算為指定單位（分數請化至最簡分數） ✨
+                </div>
+            </div>
+
+            <!-- Answer Input & Action Card -->
+            <div class="kawaii-card p-6 bg-gradient-to-r from-pink-50 via-white to-purple-50">
+                <div id="input-area" class="flex flex-col items-center justify-center gap-4">
+                    <!-- Dynamic Input elements injected here -->
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-6 flex justify-center gap-4">
+                    <button id="submit-btn" onclick="checkAnswer()" class="kawaii-btn bg-pink-400 hover:bg-pink-500 text-white font-extrabold text-lg px-10 py-3.5 rounded-2xl flex items-center gap-2 cursor-pointer">
+                        <span>送出答案</span>
+                        <span>✨</span>
+                    </button>
+
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden kawaii-btn kawaii-btn-mint bg-teal-400 hover:bg-teal-500 text-white font-extrabold text-lg px-10 py-3.5 rounded-2xl flex items-center gap-2 cursor-pointer">
+                        <span>下一題</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mascot Feedback & Thinking Explanation Box -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                <!-- Clock Mascot Avatar -->
+                <div class="md:col-span-4 kawaii-card p-4 text-center flex flex-col items-center justify-center bg-gradient-to-b from-yellow-50 to-pink-50">
+                    <div id="mascot-avatar" class="w-24 h-24 mb-2 animate-bounce-gentle transition-transform duration-300">
+                        <svg viewBox="0 0 100 100" class="w-full h-full filter drop-shadow-md">
+                            <circle cx="50" cy="50" r="42" fill="#FFE599" stroke="#FF94B9" stroke-width="5"/>
+                            <circle cx="50" cy="50" r="35" fill="#FFFFFF"/>
+                            <circle cx="20" cy="18" r="10" fill="#FF94B9"/>
+                            <circle cx="80" cy="18" r="10" fill="#FF94B9"/>
+                            <circle cx="38" cy="42" r="4" fill="#5A4A68"/>
+                            <circle cx="62" cy="42" r="4" fill="#5A4A68"/>
+                            <circle cx="40" cy="40" r="1.5" fill="#FFFFFF"/>
+                            <circle cx="64" cy="40" r="1.5" fill="#FFFFFF"/>
+                            <ellipse cx="32" cy="48" rx="4" ry="2.5" fill="#FFB6C1" opacity="0.8"/>
+                            <ellipse cx="68" cy="48" rx="4" ry="2.5" fill="#FFB6C1" opacity="0.8"/>
+                            <path d="M 40 54 Q 50 62 60 54" stroke="#5A4A68" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            <line x1="50" y1="50" x2="50" y2="30" stroke="#FF94B9" stroke-width="3" stroke-linecap="round"/>
+                            <line x1="50" y1="50" x2="65" y2="50" stroke="#81E6D9" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="50" cy="50" r="3" fill="#5A4A68"/>
+                        </svg>
+                    </div>
+                    <div class="text-xs font-bold text-pink-500 bg-white px-3 py-1 rounded-full border border-pink-200 shadow-sm">
+                        時鐘小精靈 ‧ 波波 ⏰
+                    </div>
+                </div>
+
+                <!-- Speech Bubble & Explanation Steps -->
+                <div class="md:col-span-8 flex flex-col gap-3">
+                    <div class="kawaii-card p-5 relative bg-white border-2 border-pink-200">
+                        <div class="text-xs font-bold text-gray-400 mb-1 flex items-center gap-1">
+                            <span>💬 波波小導師提示：</span>
+                        </div>
+                        <div id="mascot-dialogue" class="text-base font-bold text-pastel-text leading-relaxed">
+                            你好呀！準備好挑戰時間化聚了嗎？選一個單元開始答題吧！分數記得要化至最簡分數喔！🌸
+                        </div>
+                    </div>
+
+                    <!-- Step-by-Step Thinking Explanation Card -->
+                    <div id="explanation-card" class="hidden kawaii-card p-5 bg-gradient-to-br from-purple-50 via-white to-pink-50 border-2 border-purple-200">
+                        <div class="flex items-center gap-2 mb-3 border-b border-purple-100 pb-2">
+                            <span class="text-xl">🧠</span>
+                            <h3 class="text-base font-black text-purple-700">解題思考過程步驟 (Step-by-step)</h3>
+                        </div>
+                        <div id="explanation-content" class="text-sm font-medium text-gray-700 space-y-3 leading-relaxed">
+                            <!-- Dynamic steps -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        let currentMode = 1;
+        let score = 0;
+        let stars = 0;
+        let streak = 0;
+        let questionIndex = 1;
+        let attempts = 0;
+        let currentQuestion = null;
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    osc.frequency.setValueAtTime(783.99, now + 0.16);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.24);
+                    
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'wrong') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(280, now);
+                    osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
+                    
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+                    
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.06);
+                }
+            } catch(e) {
+                console.log('Audio playback prevented or unsupported');
+            }
+        }
+
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+
+        // Standard Vertical Fraction Formatting Helper
+        function formatFracHTML(num, den) {
+            return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+        }
+
+        // Standard Mixed Fraction Formatting Helper
+        function formatMixedFracHTML(hr, num, den) {
+            const hrStr = hr > 0 ? `<span class="font-extrabold mr-1">${hr}</span>` : '';
+            return `<span class="inline-flex items-center align-middle">${hrStr}${formatFracHTML(num, den)}</span>`;
+        }
+
+        function generateQuestion(mode) {
+            attempts = 0;
+            let q = {};
+
+            if (mode === 1) {
+                // Mode 1: Decimal ↔ Hr + Mins
+                const subtype = Math.random() < 0.5 ? 0 : 1;
+                const hours = Math.floor(Math.random() * 4); // 0 to 3
+                
+                const validSteps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+                const step = validSteps[Math.floor(Math.random() * validSteps.length)];
+                const decPart = Math.round(step * 0.05 * 100) / 100; 
+                const mins = Math.round(decPart * 60);
+                const totalDecimal = Math.round((hours + decPart) * 100) / 100;
+
+                if (subtype === 0) {
+                    q = {
+                        mode: 1,
+                        subtype: 'decToHrMin',
+                        display: `${totalDecimal} 小時 = `,
+                        targetType: 'hr_min',
+                        ansHr: hours,
+                        ansMin: mins,
+                        decimalVal: totalDecimal,
+                        decPart: decPart,
+                        steps: [
+                            `整數部分是 <b>${hours}</b> 小時。`,
+                            `小數部分 <b>${decPart}</b> 小時換算成分鐘：<br><span class="bg-yellow-100 px-2.5 py-1 rounded-xl text-amber-900 font-bold inline-block mt-1">${decPart} × 60 = ${mins} 分鐘</span>。`,
+                            `因此，答案是 <b>${hours} 小時 ${mins} 分鐘</b>！`
+                        ]
+                    };
+                } else {
+                    q = {
+                        mode: 1,
+                        subtype: 'hrMinToDec',
+                        display: `${hours > 0 ? hours + ' 小時 ' : ''}${mins} 分鐘 = `,
+                        targetType: 'decimal',
+                        ansDec: totalDecimal,
+                        ansHr: hours,
+                        ansMin: mins,
+                        decPart: decPart,
+                        steps: [
+                            `整數小時為 <b>${hours}</b> 小時。`,
+                            `將 <b>${mins}</b> 分鐘換算成小時小數：<br><span class="bg-yellow-100 px-2.5 py-1 rounded-xl text-amber-900 font-bold inline-block mt-1">${mins} ÷ 60 = ${decPart} 小時</span>。`,
+                            `結合整數部分：<b>${hours} + ${decPart} = ${totalDecimal} 小時</b>！`
+                        ]
+                    };
+                }
+            } else if (mode === 2) {
+                // Mode 2: Fraction ↔ Hr + Mins
+                const denominators = [2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60];
+                const den = denominators[Math.floor(Math.random() * denominators.length)];
+                
+                // Collect coprime numerators to guarantee simplest fraction target
+                let numerators = [];
+                for (let i = 1; i < den; i++) {
+                    if (gcd(i, den) === 1) numerators.push(i);
+                }
+                if (numerators.length === 0) numerators = [1];
+                const num = numerators[Math.floor(Math.random() * numerators.length)];
+                
+                const hours = Math.floor(Math.random() * 4);
+                const mins = Math.round((num / den) * 60);
+
+                const subtype = Math.random() < 0.5 ? 0 : 1;
+
+                if (subtype === 0) {
+                    q = {
+                        mode: 2,
+                        subtype: 'fracToHrMin',
+                        hours: hours,
+                        num: num,
+                        den: den,
+                        ansHr: hours,
+                        ansMin: mins,
+                        targetType: 'hr_min',
+                        steps: [
+                            `整數部分是 <b>${hours}</b> 小時。`,
+                            `分數部分 ${formatFracHTML(num, den)} 小時換算成分鐘：<br><span class="bg-teal-100 px-2.5 py-1 rounded-xl text-teal-900 font-bold inline-block mt-1">${num}/${den} × 60 = ${mins} 分鐘</span>。`,
+                            `因此答案為 <b>${hours} 小時 ${mins} 分鐘</b>！`
+                        ]
+                    };
+                } else {
+                    const commonDivisor = gcd(mins, 60);
+                    q = {
+                        mode: 2,
+                        subtype: 'hrMinToFrac',
+                        hours: hours,
+                        mins: mins,
+                        ansHr: hours,
+                        ansNum: num,
+                        ansDen: den,
+                        targetType: 'fraction',
+                        steps: [
+                            `整數小時為 <b>${hours}</b> 小時。`,
+                            `將 <b>${mins}</b> 分鐘寫成分數：${formatFracHTML(mins, 60)} 小時。`,
+                            `化簡分數：分子分母同除以最大公因數 <b>${commonDivisor}</b>，約簡得最簡分數 ${formatFracHTML(num, den)}。`,
+                            `因此答案為 <b>${formatMixedFracHTML(hours, num, den)} 小時</b>！`
+                        ]
+                    };
+                }
+            } else if (mode === 3) {
+                // Mode 3: Mixed Multiple Choice (4 Options)
+                const isDecimalType = Math.random() < 0.5;
+                if (isDecimalType) {
+                    const subQ = generateQuestion(1);
+                    q = { ...subQ, mode: 3, isMC: true };
+                } else {
+                    const subQ = generateQuestion(2);
+                    q = { ...subQ, mode: 3, isMC: true };
+                }
+
+                q.options = generateMCOptions(q);
+            }
+
+            return q;
+        }
+
+        function generateMCOptions(q) {
+            let rawOptions = [];
+
+            if (q.targetType === 'hr_min') {
+                const correctText = `${q.ansHr} 小時 ${q.ansMin} 分鐘`;
+                rawOptions.push({ html: correctText, isCorrect: true });
+
+                const distractors = [
+                    `${q.ansHr} 小時 ${Math.abs(q.ansMin - 6)} 分鐘`,
+                    `${q.ansHr + 1} 小時 ${q.ansMin} 分鐘`,
+                    `${q.ansHr} 小時 ${Math.min(59, q.ansMin + 12)} 分鐘`
+                ];
+                
+                distractors.forEach(d => {
+                    if (!rawOptions.some(o => o.html === d) && rawOptions.length < 4) {
+                        rawOptions.push({ html: d, isCorrect: false });
+                    }
+                });
+            } else if (q.targetType === 'decimal') {
+                const correctText = `${q.ansDec} 小時`;
+                rawOptions.push({ html: correctText, isCorrect: true });
+
+                const distractors = [
+                    `${(q.ansDec + 0.1).toFixed(2)} 小時`,
+                    `${(q.ansDec - 0.05 > 0 ? q.ansDec - 0.05 : q.ansDec + 0.2).toFixed(2)} 小時`,
+                    `${(q.ansHr + q.ansMin / 100).toFixed(2)} 小時`
+                ];
+
+                distractors.forEach(d => {
+                    if (!rawOptions.some(o => o.html === d) && rawOptions.length < 4) {
+                        rawOptions.push({ html: d, isCorrect: false });
+                    }
+                });
+            } else if (q.targetType === 'fraction') {
+                const correctText = `${formatMixedFracHTML(q.ansHr, q.ansNum, q.ansDen)} 小時`;
+                rawOptions.push({ html: correctText, isCorrect: true });
+
+                const distractors = [
+                    `${formatMixedFracHTML(q.ansHr, Math.min(q.ansDen - 1, q.ansNum + 1), q.ansDen)} 小時`,
+                    `${formatMixedFracHTML(q.ansHr + 1, q.ansNum, q.ansDen)} 小時`,
+                    `${formatMixedFracHTML(q.ansHr, q.ansNum, Math.min(60, q.ansDen * 2))} 小時`
+                ];
+
+                distractors.forEach(d => {
+                    if (!rawOptions.some(o => o.html === d) && rawOptions.length < 4) {
+                        rawOptions.push({ html: d, isCorrect: false });
+                    }
+                });
+            }
+
+            while (rawOptions.length < 4) {
+                const fillText = `${q.ansHr || 1} 小時 ${(rawOptions.length * 10)} 分鐘`;
+                rawOptions.push({ html: fillText, isCorrect: false });
+            }
+
+            return rawOptions.sort(() => Math.random() - 0.5);
+        }
+
+        function renderQuestion() {
+            currentQuestion = generateQuestion(currentMode);
+            const promptEl = document.getElementById('question-prompt');
+            const inputAreaEl = document.getElementById('input-area');
+            const modeBadgeEl = document.getElementById('question-mode-badge');
+            const explanationCard = document.getElementById('explanation-card');
+            
+            explanationCard.classList.add('hidden');
+            document.getElementById('submit-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            updateMascotDialogue(`請加油答題！分數答案記得要約至最簡分數喔！✨🌸`, 'normal');
+
+            // Render Question Header Badge & Prompt
+            if (currentMode === 1) {
+                modeBadgeEl.innerText = "選項一：小數與時分互化";
+                modeBadgeEl.className = "px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-bold";
+                promptEl.innerHTML = `<span>${currentQuestion.display}</span>`;
+            } else if (currentMode === 2) {
+                modeBadgeEl.innerText = "選項二：分數與時分互化 (須最簡分數)";
+                modeBadgeEl.className = "px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-bold";
+
+                if (currentQuestion.subtype === 'fracToHrMin') {
+                    promptEl.innerHTML = `
+                        <div class="flex items-center justify-center gap-1">
+                            ${formatMixedFracHTML(currentQuestion.hours, currentQuestion.num, currentQuestion.den)}
+                            <span class="ml-2">小時 =</span>
+                        </div>
+                    `;
+                } else {
+                    promptEl.innerHTML = `<span>${currentQuestion.hours > 0 ? currentQuestion.hours + ' 小時 ' : ''}${currentQuestion.mins} 分鐘 =</span>`;
+                }
+            } else {
+                modeBadgeEl.innerText = "選項三：混合化聚挑戰（選擇題）";
+                modeBadgeEl.className = "px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold";
+
+                if (currentQuestion.subtype === 'fracToHrMin') {
+                    promptEl.innerHTML = `
+                        <div class="flex items-center justify-center gap-1">
+                            ${formatMixedFracHTML(currentQuestion.hours, currentQuestion.num, currentQuestion.den)}
+                            <span class="ml-2">小時 等於多少？</span>
+                        </div>
+                    `;
+                } else {
+                    promptEl.innerHTML = `<span>${currentQuestion.display || (currentQuestion.hours + ' 小時 ' + currentQuestion.mins + ' 分鐘')} 等於多少？</span>`;
+                }
+            }
+
+            // Render Input Forms
+            inputAreaEl.innerHTML = '';
+
+            if (currentMode === 3) {
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full max-w-xl";
+
+                currentQuestion.options.forEach((optObj, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.onclick = () => selectMCOption(btn, optObj);
+                    btn.className = "mc-option-btn kawaii-btn bg-white hover:bg-purple-50 border-2 border-purple-200 text-pastel-text font-bold p-4 min-h-[72px] rounded-2xl flex items-center gap-3 text-left transition-all cursor-pointer";
+                    btn.innerHTML = `
+                        <span class="w-8 h-8 rounded-full bg-purple-200 text-purple-700 font-black flex items-center justify-center shrink-0">
+                            ${String.fromCharCode(65 + idx)}
+                        </span>
+                        <div class="flex-1 text-base md:text-lg flex items-center flex-wrap leading-normal">${optObj.html}</div>
+                    `;
+                    grid.appendChild(btn);
+                });
+
+                inputAreaEl.appendChild(grid);
+                window.selectedMCOptionObj = null;
+            } else {
+                if (currentQuestion.targetType === 'hr_min') {
+                    inputAreaEl.innerHTML = `
+                        <div class="flex items-center gap-3 text-lg md:text-xl font-extrabold flex-wrap justify-center">
+                            <input id="input-hr" type="number" min="0" placeholder="0" class="w-20 md:w-24 p-3 text-center rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none text-2xl font-black bg-white shadow-inner" />
+                            <span>小時</span>
+                            <input id="input-min" type="number" min="0" max="59" placeholder="0" class="w-20 md:w-24 p-3 text-center rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none text-2xl font-black bg-white shadow-inner" />
+                            <span>分鐘</span>
+                        </div>
+                    `;
+                } else if (currentQuestion.targetType === 'decimal') {
+                    inputAreaEl.innerHTML = `
+                        <div class="flex items-center gap-3 text-lg md:text-xl font-extrabold justify-center">
+                            <input id="input-dec" type="number" step="0.01" min="0" placeholder="0.00" class="w-32 md:w-40 p-3 text-center rounded-2xl border-4 border-pink-200 focus:border-pink-400 focus:outline-none text-2xl font-black bg-white shadow-inner" />
+                            <span>小時</span>
+                        </div>
+                    `;
+                } else if (currentQuestion.targetType === 'fraction') {
+                    inputAreaEl.innerHTML = `
+                        <div class="flex items-center gap-3 text-lg md:text-xl font-extrabold justify-center flex-wrap">
+                            <div class="flex flex-col items-center">
+                                <span class="text-xs text-gray-400 font-normal mb-1">整數小時</span>
+                                <input id="input-frac-hr" type="number" min="0" placeholder="0" class="w-16 md:w-20 p-2.5 text-center rounded-2xl border-4 border-teal-200 focus:border-teal-400 focus:outline-none text-xl font-black bg-white shadow-inner" />
+                            </div>
+                            
+                            <div class="flex flex-col items-center gap-1 bg-teal-50/80 p-3 rounded-2xl border-2 border-teal-200 shadow-sm">
+                                <span class="text-xs text-teal-700 font-bold">分子</span>
+                                <input id="input-frac-num" type="number" min="0" placeholder="分子" class="w-16 md:w-20 p-1.5 text-center rounded-xl border-2 border-teal-300 focus:border-teal-500 focus:outline-none text-lg font-bold bg-white" />
+                                <div class="w-full h-1 bg-teal-400 rounded-full my-0.5"></div>
+                                <input id="input-frac-den" type="number" min="1" max="60" placeholder="分母" class="w-16 md:w-20 p-1.5 text-center rounded-xl border-2 border-teal-300 focus:border-teal-500 focus:outline-none text-lg font-bold bg-white" />
+                                <span class="text-xs text-teal-700 font-bold">分母</span>
+                            </div>
+
+                            <div class="flex flex-col items-start justify-center">
+                                <span>小時</span>
+                                <span class="text-xs text-teal-600 font-bold mt-1">※ 答案須為最簡分數</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function selectMCOption(btnElement, optObj) {
+            playSound('click');
+            document.querySelectorAll('.mc-option-btn').forEach(b => {
+                b.classList.remove('border-purple-500', 'bg-purple-100', 'ring-4', 'ring-purple-200');
+                b.classList.add('bg-white');
+            });
+
+            btnElement.classList.remove('bg-white');
+            btnElement.classList.add('border-purple-500', 'bg-purple-100', 'ring-4', 'ring-purple-200');
+            window.selectedMCOptionObj = optObj;
+        }
+
+        function checkAnswer() {
+            playSound('click');
+            let isCorrect = false;
+
+            if (currentMode === 3) {
+                if (!window.selectedMCOptionObj) {
+                    updateMascotDialogue("請先點選一個答案選項喔！👉👈", 'normal');
+                    return;
+                }
+
+                isCorrect = window.selectedMCOptionObj.isCorrect;
+            } else {
+                if (currentQuestion.targetType === 'hr_min') {
+                    const hrIn = parseInt(document.getElementById('input-hr').value || '0', 10);
+                    const minIn = parseInt(document.getElementById('input-min').value || '0', 10);
+                    isCorrect = (hrIn === currentQuestion.ansHr && minIn === currentQuestion.ansMin);
+                } else if (currentQuestion.targetType === 'decimal') {
+                    const decIn = parseFloat(document.getElementById('input-dec').value || '0');
+                    isCorrect = (Math.abs(decIn - currentQuestion.ansDec) < 0.001);
+                } else if (currentQuestion.targetType === 'fraction') {
+                    const hrIn = parseInt(document.getElementById('input-frac-hr').value || '0', 10);
+                    const numInStr = document.getElementById('input-frac-num').value.trim();
+                    const denInStr = document.getElementById('input-frac-den').value.trim();
+
+                    if (numInStr === '' || denInStr === '') {
+                        updateMascotDialogue("請完整填寫分數的【分子】和【分母】喔！👉👈", 'normal');
+                        return;
+                    }
+
+                    const numIn = parseInt(numInStr, 10);
+                    const denIn = parseInt(denInStr, 10);
+
+                    if (denIn <= 0) {
+                        updateMascotDialogue("分母必須大於 0 喔！請重新檢查填寫。👉👈", 'normal');
+                        return;
+                    }
+
+                    const userGcd = gcd(numIn, denIn);
+                    const userVal = numIn / denIn;
+                    const targetVal = currentQuestion.ansNum / currentQuestion.ansDen;
+
+                    // Check value match
+                    if (hrIn === currentQuestion.ansHr && Math.abs(userVal - targetVal) < 0.0001) {
+                        // Value matches! Now enforce STRICT SIMPLEST FRACTION rule
+                        if (userGcd > 1) {
+                            playSound('wrong');
+                            updateMascotDialogue(
+                                `數值完全正確！但是<b>未約至最簡分數</b>喔！<br>` +
+                                `提示：分子 ${numIn} 和分母 ${denIn} 可以同時除以 <b>${userGcd}</b>，試試看化簡答案！✨`, 
+                                'thinking'
+                            );
+                            return; // Do NOT accept, let them fix the fraction
+                        } else {
+                            isCorrect = true;
+                        }
+                    } else {
+                        isCorrect = false;
+                    }
+                }
+            }
+
+            if (isCorrect) {
+                playSound('correct');
+                score += 10;
+                stars += 1;
+                streak += 1;
+                updateStats();
+                triggerConfetti();
+
+                const praises = [
+                    "太棒了！你真是時間小達人！最簡分數也算對了！✨🌸",
+                    "完全正確！算得又快又準，好厲害呀！🎉",
+                    "真聰明！波波為你拍拍手！拍手~👏✨",
+                    "答對了！最簡分數掌握得很完美喔！🌟"
+                ];
+                const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+                updateMascotDialogue(randomPraise, 'happy');
+
+                showExplanation();
+
+                document.getElementById('submit-btn').classList.add('hidden');
+                document.getElementById('next-btn').classList.remove('hidden');
+            } else {
+                playSound('wrong');
+                attempts++;
+                streak = 0;
+                updateStats();
+
+                if (attempts === 1) {
+                    let hint1 = "再試試看喔！提示：1 小時等於 60 分鐘。試試把小數或分數乘以 60 換算成分鐘！💡";
+                    if (currentQuestion.targetType === 'decimal' || currentQuestion.targetType === 'fraction') {
+                        hint1 = "再試試看喔！提示：把分鐘數寫成分母為 60 的分數，再約至最簡分數喔！💡";
+                    }
+                    updateMascotDialogue(hint1, 'encouraging');
+                } else if (attempts === 2) {
+                    let hint2 = "差一點點了！加油！仔細檢查一下計算過程，整數小時與分鐘有沒有拆開呢？💪";
+                    updateMascotDialogue(hint2, 'thinking');
+                } else {
+                    updateMascotDialogue("沒關係，我們一起來學習這道題目的解答思考過程吧！記下來下次一定會！✨", 'explaining');
+                    showExplanation();
+
+                    document.getElementById('submit-btn').classList.add('hidden');
+                    document.getElementById('next-btn').classList.remove('hidden');
+                }
+            }
+        }
+
+        function showExplanation() {
+            const expCard = document.getElementById('explanation-card');
+            const expContent = document.getElementById('explanation-content');
+            expCard.classList.remove('hidden');
+
+            let stepsHTML = "";
+            currentQuestion.steps.forEach((stepText, idx) => {
+                stepsHTML += `
+                    <div class="flex items-start gap-2.5">
+                        <span class="px-2.5 py-1 bg-purple-200 text-purple-800 rounded-xl font-black text-xs shrink-0 mt-0.5 shadow-sm">
+                            步驟 ${idx + 1}
+                        </span>
+                        <div class="text-base text-gray-800 leading-normal">${stepText}</div>
+                    </div>
+                `;
+            });
+
+            expContent.innerHTML = stepsHTML;
+        }
+
+        function updateMascotDialogue(text, mood) {
+            const dialogueEl = document.getElementById('mascot-dialogue');
+            const avatarContainer = document.getElementById('mascot-avatar');
+            dialogueEl.innerHTML = text;
+
+            if (mood === 'happy') {
+                avatarContainer.className = "w-24 h-24 mb-2 animate-bounce-gentle scale-110 transition-transform";
+            } else if (mood === 'encouraging' || mood === 'thinking') {
+                avatarContainer.className = "w-24 h-24 mb-2 animate-wiggle transition-transform";
+            } else {
+                avatarContainer.className = "w-24 h-24 mb-2 animate-bounce-gentle transition-transform";
+            }
+        }
+
+        function switchMode(modeNum) {
+            playSound('click');
+            currentMode = modeNum;
+            questionIndex = 1;
+            document.getElementById('q-num').innerText = questionIndex;
+
+            [1, 2, 3].forEach(m => {
+                const btn = document.getElementById(`mode-btn-${m}`);
+                if (m === modeNum) {
+                    btn.classList.add('ring-4', 'ring-pink-300', 'scale-105');
+                } else {
+                    btn.classList.remove('ring-4', 'ring-pink-300', 'scale-105');
+                }
+            });
+
+            renderQuestion();
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            questionIndex++;
+            document.getElementById('q-num').innerText = questionIndex;
+            renderQuestion();
+        }
+
+        function updateStats() {
+            document.getElementById('stat-score').innerText = score;
+            document.getElementById('stat-stars').innerText = `⭐ ${stars}`;
+            document.getElementById('stat-streak').innerText = `🔥 ${streak}`;
+        }
+
+        function resetStats() {
+            playSound('click');
+            score = 0;
+            stars = 0;
+            streak = 0;
+            questionIndex = 1;
+            document.getElementById('q-num').innerText = questionIndex;
+            updateStats();
+            renderQuestion();
+            updateMascotDialogue("紀錄已重置！隨時可以重新開始練習喔！🌱", 'normal');
+        }
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#FF94B9', '#FFE599', '#81E6D9', '#B39DDB', '#FFD1DC'];
+
+            for (let i = 0; i < 60; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: (Math.random() - 0.7) * 14,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 100
+                });
+            }
+
+            function animateConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.3;
+                        p.life -= 1.5;
+
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                if (alive) {
+                    requestAnimationFrame(animateConfetti);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            animateConfetti();
+        }
+
+        window.onload = function() {
+            switchMode(1);
+        };
+    </script>
+</body>
+</html>
